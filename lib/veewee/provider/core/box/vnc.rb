@@ -36,8 +36,8 @@ module Veewee
 
       def send_vnc_keycode(vnc,keycode)
 
-        if keycode.is_a?(Symbol)
-          vnc.key_press keycode
+        if keycode.is_a?(Symbol) || keycode.is_a?(Array)
+          vnc.key_press *keycode
           sleep 1
         else
             vnc.type_string keycode,{:wait => 0.1}
@@ -53,6 +53,7 @@ module Veewee
         special=Hash.new
         # Specific veewee
         special['<Wait>'] = :wait
+        special['<Mod>'] = :modifier
 
         # VNC Codes
         special['<Enter>'] = :return
@@ -77,6 +78,9 @@ module Veewee
         special['<Right>'] = :right
         special['<Home>'] = :home
 
+        special['<Ctrl>'] = :control
+        special['<Super>'] = :super
+
         special['<F1>'] = :f1
         special['<F2>'] = :f2
         special['<F3>'] = :f3
@@ -90,6 +94,14 @@ module Veewee
 
         keycodes=Array.new
         thestring.gsub!(/ /,"<Spacebar>")
+
+        if thestring.start_with?("<Mod>")
+          # call ourself for the remaining string so we add the
+          # key combo codes as an array (to an array), vnc.key_press
+          # will do the right thing given multiple keycodes
+          keycodes<<string_to_vnccode(thestring.split("<Mod>")[1])
+          thestring=""
+        end
 
         until thestring.length == 0
           nospecial=true;
